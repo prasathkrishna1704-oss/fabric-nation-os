@@ -4,13 +4,17 @@ import pg from "pg";
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
-  if (connectionString) {
-    const pool = new pg.Pool({ connectionString });
-    const adapter = new PrismaPg(pool);
-    return new PrismaClient({ adapter });
+  if (!connectionString) {
+    // Return a dummy proxy during build time if DATABASE_URL is missing
+    return new Proxy({}, {
+      get() {
+        return () => Promise.resolve(null);
+      }
+    }) as unknown as PrismaClient;
   }
-  // Fallback to default Prisma initialization (will error at runtime if no URL in env)
-  return new PrismaClient();
+  const pool = new pg.Pool({ connectionString });
+  const adapter = new PrismaPg(pool);
+  return new PrismaClient({ adapter });
 }
 
 const globalForPrisma = globalThis as unknown as {
