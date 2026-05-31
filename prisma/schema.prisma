@@ -1,0 +1,205 @@
+// Fabric Store Billing & Inventory OS - Database Schema
+// Prisma Postgres (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── CUSTOMER ──────────────────────────────────────────────
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  gstin     String?  // GST Identification Number (optional for walk-in)
+  address   String?
+  city      String?
+  stateCode String?  @map("state_code") // 2-digit state code for GST
+  pincode   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  invoices Invoice[]
+
+  @@map("customers")
+}
+
+// ─── PRODUCT (FABRIC) ──────────────────────────────────────
+model Product {
+  id                String   @id @default(cuid())
+  name              String
+  hsnCode           String?  @map("hsn_code") // Harmonized System Nomenclature code
+  category          String?  // Cotton, Silk, Polyester, etc.
+  fabricType        String?  @map("fabric_type")
+  color             String?
+  gsm               String?
+  unit              String   @default("METER") // METER, KILOGRAM, YARD, PIECE
+  costPrice         Float    @default(0) @map("cost_price")
+  sellingPrice      Float    @default(0) @map("selling_price")
+  gstRate           Float    @default(5) @map("gst_rate") // GST percentage: 5, 12, 18, 28
+  currentStock      Float    @default(0) @map("current_stock") // Decimal quantity
+  lowStockThreshold Float    @default(5) @map("low_stock_threshold")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  invoiceItems InvoiceItem[]
+  purchaseItems PurchaseItem[]
+  stockLedger  StockLedger[]
+
+  @@map("products")
+}
+
+// ─── INVOICE ───────────────────────────────────────────────
+model Invoice {
+  id              String   @id @default(cuid())
+  invoiceNumber   String   @unique @map("invoice_number") // INV-2026-001 or EST-2026-001
+  type            String   @default("NON_GST") // GST or NON_GST
+  customerId      String?  @map("customer_id")
+  customerName    String?  @map("customer_name") // For walk-in customers
+  customerPhone   String?  @map("customer_phone")
+  customerGstin   String?  @map("customer_gstin")
+  billingAddress  String?  @map("billing_address")
+  shippingAddress String?  @map("shipping_address")
+  subtotal        Float    @default(0)
+  discountPercent Float    @default(0) @map("discount_percent")
+  discountAmount  Float    @default(0) @map("discount_amount")
+  cgstAmount      Float    @default(0) @map("cgst_amount")
+  sgstAmount      Float    @default(0) @map("sgst_amount")
+  igstAmount      Float    @default(0) @map("igst_amount")
+  totalAmount     Float    @default(0) @map("total_amount")
+  paymentMethod   String   @default("CASH") @map("payment_method") // CASH, UPI, CARD, CREDIT
+  paymentStatus   String   @default("PAID") @map("payment_status") // PAID, PARTIAL, UNPAID
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  customer Customer?     @relation(fields: [customerId], references: [id])
+  items    InvoiceItem[]
+
+  @@map("invoices")
+}
+
+// ─── INVOICE ITEM ──────────────────────────────────────────
+model InvoiceItem {
+  id          String @id @default(cuid())
+  invoiceId   String @map("invoice_id")
+  productId   String @map("product_id")
+  productName String @map("product_name") // Snapshot at time of sale
+  hsnCode     String? @map("hsn_code")    // Snapshot
+  unit        String @default("METER")
+  quantity    Float  // Fractional: 2.5 meters, 1.75 kgs
+  rate        Float  // Per unit rate at time of sale
+  gstRate     Float  @default(0) @map("gst_rate")
+  cgst        Float  @default(0)
+  sgst        Float  @default(0)
+  igst        Float  @default(0)
+  amount      Float  // quantity * rate + taxes
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("invoice_items")
+}
+
+// ─── STOCK LEDGER ──────────────────────────────────────────
+model StockLedger {
+  id            String   @id @default(cuid())
+  productId     String   @map("product_id")
+  type          String   // INWARD, OUTWARD, ADJUSTMENT
+  quantity      Float    // Positive for in, negative for out
+  referenceType String?  @map("reference_type") // PURCHASE, INVOICE, MANUAL
+  referenceId   String?  @map("reference_id")
+  notes         String?
+  balanceAfter  Float    @default(0) @map("balance_after")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("stock_ledger")
+}
+
+// ─── SETTINGS ──────────────────────────────────────────────
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+
+  @@map("settings")
+}
+
+// ─── SUPPLIER ──────────────────────────────────────────────
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  gstin     String?
+  address   String?
+  city      String?
+  stateCode String?  @map("state_code")
+  pincode   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  purchases Purchase[]
+
+  @@map("suppliers")
+}
+
+// ─── PURCHASE ──────────────────────────────────────────────
+model Purchase {
+  id              String   @id @default(cuid())
+  purchaseNumber  String   @unique @map("purchase_number") // PUR-2026-001
+  type            String   @default("GST") // GST or NON_GST
+  supplierId      String?  @map("supplier_id")
+  supplierName    String?  @map("supplier_name")
+  supplierPhone   String?  @map("supplier_phone")
+  supplierGstin   String?  @map("supplier_gstin")
+  supplierInvoiceNumber String? @map("supplier_invoice_number")
+  billingAddress  String?  @map("billing_address")
+  subtotal        Float    @default(0)
+  discountPercent Float    @default(0) @map("discount_percent")
+  discountAmount  Float    @default(0) @map("discount_amount")
+  cgstAmount      Float    @default(0) @map("cgst_amount")
+  sgstAmount      Float    @default(0) @map("sgst_amount")
+  igstAmount      Float    @default(0) @map("igst_amount")
+  totalAmount     Float    @default(0) @map("total_amount")
+  paymentMethod   String   @default("CASH") @map("payment_method")
+  paymentStatus   String   @default("PAID") @map("payment_status")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  supplier Supplier?   @relation(fields: [supplierId], references: [id])
+  items    PurchaseItem[]
+
+  @@map("purchases")
+}
+
+// ─── PURCHASE ITEM ─────────────────────────────────────────
+model PurchaseItem {
+  id          String @id @default(cuid())
+  purchaseId  String @map("purchase_id")
+  productId   String @map("product_id")
+  productName String @map("product_name")
+  hsnCode     String? @map("hsn_code")
+  unit        String @default("METER")
+  quantity    Float
+  rate        Float
+  gstRate     Float  @default(0) @map("gst_rate")
+  cgst        Float  @default(0)
+  sgst        Float  @default(0)
+  igst        Float  @default(0)
+  amount      Float
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@map("purchase_items")
+}
