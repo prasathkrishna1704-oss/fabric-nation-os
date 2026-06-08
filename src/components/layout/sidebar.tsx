@@ -149,7 +149,7 @@ export function Sidebar({ role }: { role?: string | null }) {
         >
           <p className="text-[10px] text-red-400/60 font-semibold uppercase tracking-[0.15em] mb-1">Shop</p>
           <p className="text-xs text-white/80 font-semibold">Fabric Nation</p>
-          <p className="text-[10px] text-white/30 mt-0.5">Tirupur · GSTIN: 33AAAA1234A1Z5</p>
+          <p className="text-[10px] text-white/30 mt-0.5">Tirupur · GSTIN: 33BCMPV5075R1ZK</p>
         </div>
         <button 
           onClick={() => logout()} 

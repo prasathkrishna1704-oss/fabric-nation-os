@@ -110,7 +110,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             {isGST && (
               <div className="flex gap-2">
                 <span className="font-bold text-[#1D1E27] w-24">GSTIN</span>
-                <span className="text-[#1D1E27] font-mono">: 33AAAA1234A1Z5</span>
+                <span className="text-[#1D1E27] font-mono">: 33BCMPV5075R1ZK</span>
               </div>
             )}
             <div className="flex gap-2">

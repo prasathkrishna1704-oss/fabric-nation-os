@@ -33,10 +33,12 @@ model Customer {
 model Product {
   id                String   @id @default(cuid())
   name              String
+  productCode       String?  @map("product_code")
   hsnCode           String?  @map("hsn_code") // Harmonized System Nomenclature code
   category          String?  // Cotton, Silk, Polyester, etc.
   fabricType        String?  @map("fabric_type")
   color             String?
+  numberOfRolls     Int?     @map("number_of_rolls")
   gsm               String?
   unit              String   @default("METER") // METER, KILOGRAM, YARD, PIECE
   costPrice         Float    @default(0) @map("cost_price")

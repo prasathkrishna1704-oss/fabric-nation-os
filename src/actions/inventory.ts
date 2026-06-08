@@ -31,10 +31,12 @@ export async function getProduct(id: string) {
 
 export async function createProduct(data: {
   name: string;
+  productCode?: string;
   hsnCode?: string;
   category?: string;
   fabricType?: string;
   color?: string;
+  numberOfRolls?: number;
   gsm?: string;
   unit: string;
   costPrice: number;
@@ -48,10 +50,12 @@ export async function createProduct(data: {
   const product = await prisma.product.create({
     data: {
       name: data.name,
+      productCode: data.productCode || null,
       hsnCode: data.hsnCode || null,
       category: data.category || null,
       fabricType: data.fabricType || null,
       color: data.color || null,
+      numberOfRolls: data.numberOfRolls || null,
       gsm: data.gsm || null,
       unit: data.unit,
       costPrice: data.costPrice,
@@ -133,10 +137,12 @@ export async function updateProduct(
   id: string,
   data: {
     name: string;
+    productCode?: string;
     hsnCode?: string;
     category?: string;
     fabricType?: string;
     color?: string;
+    numberOfRolls?: number;
     gsm?: string;
     unit: string;
     costPrice: number;
@@ -149,10 +155,12 @@ export async function updateProduct(
     where: { id },
     data: {
       name: data.name,
+      productCode: data.productCode || null,
       hsnCode: data.hsnCode || null,
       category: data.category || null,
       fabricType: data.fabricType || null,
       color: data.color || null,
+      numberOfRolls: data.numberOfRolls || null,
       gsm: data.gsm || null,
       unit: data.unit,
       costPrice: data.costPrice,

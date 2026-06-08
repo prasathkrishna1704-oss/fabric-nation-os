@@ -63,11 +63,13 @@ export function ProductTable({ products, role }: ProductTableProps) {
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               <TableHead className="w-[260px]">Product</TableHead>
+              <TableHead>Colour</TableHead>
               <TableHead>HSN</TableHead>
               <TableHead>Unit</TableHead>
               <TableHead className="text-right">Cost</TableHead>
               <TableHead className="text-right">Price</TableHead>
-              <TableHead>GST</TableHead>
+              <TableHead>GST %</TableHead>
+              <TableHead className="text-center">Number of Rolls</TableHead>
               <TableHead className="text-right">Stock</TableHead>
               <TableHead className="w-10"></TableHead>
             </TableRow>
@@ -75,7 +77,7 @@ export function ProductTable({ products, role }: ProductTableProps) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-sm">
+                <TableCell colSpan={10} className="text-center py-12 text-muted-foreground text-sm">
                   {search ? "No products matching your search" : "No products yet — add your first fabric"}
                 </TableCell>
               </TableRow>
@@ -92,9 +94,15 @@ export function ProductTable({ products, role }: ProductTableProps) {
                         )}
                         <div>
                           <p className="font-medium text-foreground text-sm">{product.name}</p>
-                          {product.category && <p className="text-xs text-muted-foreground">{product.category}</p>}
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {product.productCode && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{product.productCode}</Badge>}
+                            {product.category && <span className="text-xs text-muted-foreground">{product.category}</span>}
+                          </div>
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs text-muted-foreground">{product.color || "—"}</span>
                     </TableCell>
                     <TableCell>
                       <span className="text-xs font-mono text-muted-foreground">{product.hsnCode || "—"}</span>
@@ -110,6 +118,9 @@ export function ProductTable({ products, role }: ProductTableProps) {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">{product.gstRate}%</Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="text-sm font-medium text-muted-foreground">{product.numberOfRolls || "—"}</span>
                     </TableCell>
                     <TableCell className="text-right">
                       <span className={`text-sm font-semibold ${isCritical ? "text-red-400" : isLow ? "text-amber-400" : "text-emerald-400"}`}>

@@ -21,10 +21,12 @@ export function ProductForm({ product }: ProductFormProps) {
 
   const [form, setForm] = useState({
     name: product?.name ?? "",
+    productCode: product?.productCode ?? "",
     hsnCode: product?.hsnCode ?? "",
     category: product?.category ?? "",
     fabricType: product?.fabricType ?? "",
     color: product?.color ?? "",
+    numberOfRolls: product?.numberOfRolls?.toString() ?? "",
     gsm: product?.gsm ?? "",
     unit: product?.unit ?? "METER",
     costPrice: product?.costPrice?.toString() ?? "",
@@ -32,8 +34,6 @@ export function ProductForm({ product }: ProductFormProps) {
     gstRate: product?.gstRate?.toString() ?? "5",
     currentStock: product?.currentStock?.toString() ?? "0",
     lowStockThreshold: product?.lowStockThreshold?.toString() ?? "5",
-    supplierInvoiceNumber: "",
-    supplierName: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,10 +41,12 @@ export function ProductForm({ product }: ProductFormProps) {
     startTransition(async () => {
       const data = {
         name: form.name,
+        productCode: form.productCode || undefined,
         hsnCode: form.hsnCode || undefined,
         category: form.category || undefined,
         fabricType: form.fabricType || undefined,
         color: form.color || undefined,
+        numberOfRolls: form.numberOfRolls ? parseInt(form.numberOfRolls) : undefined,
         gsm: form.gsm || undefined,
         unit: form.unit,
         costPrice: parseFloat(form.costPrice) || 0,
@@ -52,8 +54,6 @@ export function ProductForm({ product }: ProductFormProps) {
         gstRate: parseFloat(form.gstRate) || 5,
         currentStock: parseFloat(form.currentStock) || 0,
         lowStockThreshold: parseFloat(form.lowStockThreshold) || 5,
-        supplierInvoiceNumber: form.supplierInvoiceNumber || undefined,
-        supplierName: form.supplierName || undefined,
       };
       if (product) {
         await updateProduct(product.id, data);
@@ -81,15 +81,30 @@ export function ProductForm({ product }: ProductFormProps) {
           <h2 className="text-lg font-black text-gray-900 tracking-tight">Product Details</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="sm:col-span-3 space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="sm:col-span-2 space-y-2">
             <Label htmlFor="name" className={labelClass}>Product Name *</Label>
             <Input id="name" placeholder="e.g. Pure Cotton White" required {...field("name")} className={`${inputClass} font-bold text-lg`} />
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="productCode" className={labelClass}>Product Code</Label>
+            <Input id="productCode" placeholder="e.g. CTN-WHT-001" {...field("productCode")} className={inputClass} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="color" className={labelClass}>Fabric Colour</Label>
+            <Input id="color" placeholder="e.g. Royal Blue" {...field("color")} className={inputClass} />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="gsm" className={labelClass}>GSM (Weight)</Label>
             <Input id="gsm" placeholder="e.g. 150 GSM" {...field("gsm")} className={inputClass} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="numberOfRolls" className={labelClass}>Number of Rolls</Label>
+            <Input id="numberOfRolls" type="number" min="0" placeholder="e.g. 10" {...field("numberOfRolls")} className={inputClass} />
           </div>
 
           <div className="space-y-2">
@@ -147,23 +162,6 @@ export function ProductForm({ product }: ProductFormProps) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {!product && (
-            <>
-
-              <div className="space-y-2 flex flex-col">
-                <Label htmlFor="supplierName" className={labelClass}>Supplier Name</Label>
-                <Input id="supplierName" placeholder="e.g. Acme Fabrics" {...field("supplierName")} className={inputClass} />
-                <p className="text-[11px] font-medium text-gray-400 mt-auto pt-1">Optional. Name of the supplier.</p>
-              </div>
-              <div className="space-y-2 flex flex-col">
-                <Label htmlFor="supplierInvoiceNumber" className={labelClass}>Invoice Number</Label>
-                <Input id="supplierInvoiceNumber" placeholder="e.g. INV-2026" {...field("supplierInvoiceNumber")} className={inputClass} />
-                <p className="text-[11px] font-medium text-gray-400 mt-auto pt-1">Optional. Auto-generates a Purchase Invoice.</p>
-              </div>
-            </>
-          )}
-
-
           <div className="space-y-2 flex flex-col">
             <Label htmlFor="currentStock" className={labelClass}>Opening Stock</Label>
             <Input id="currentStock" type="number" step="0.01" min="0" placeholder="0" {...field("currentStock")} className={inputClass} />

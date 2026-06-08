@@ -131,7 +131,7 @@ function appendFullInvoices(doc: jsPDF, data: ReportData, isGST: boolean) {
     y += 5;
 
     if (inv.type === "GST") {
-      doc.setFont("helvetica", "bold"); doc.text("GSTIN", 14, y); doc.setFont("helvetica", "normal"); doc.text(`: 33AAAA1234A1Z5`, 40, y);
+      doc.setFont("helvetica", "bold"); doc.text("GSTIN", 14, y); doc.setFont("helvetica", "normal"); doc.text(`: 33BCMPV5075R1ZK`, 40, y);
       y += 5;
     }
     
@@ -240,7 +240,7 @@ function addHeader(doc: jsPDF, title: string, period: string, startDate: Date, e
   doc.setTextColor(75, 78, 83);
   doc.setFont("helvetica", "normal");
   doc.text("No.46 Rice mill compound, Alangadu, Karuvampalayam, Tirupur,Tamil Nadu - 641604", 105, 24, { align: "center" });
-  doc.text("Ph: 9876543210 · GSTIN: 33AAAA1234A1Z5", 105, 28, { align: "center" });
+  doc.text("Ph: 9876543210 · GSTIN: 33BCMPV5075R1ZK", 105, 28, { align: "center" });
 
   // Title
   doc.setDrawColor(29, 30, 39);
