@@ -47,7 +47,6 @@ export function InvoiceForm({ products, customers }: InvoiceFormProps) {
   const [discountPercent, setDiscountPercent] = useState("0");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [scannerInput, setScannerInput] = useState("");
   const [lines, setLines] = useState<LineItem[]>([
     { productId: "", quantity: "", rate: "", gstRate: 5 },
   ]);
@@ -87,35 +86,6 @@ export function InvoiceForm({ products, customers }: InvoiceFormProps) {
     });
   };
 
-  const handleScannerKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const query = scannerInput.trim();
-      if (!query) return;
-
-      const p = products.find((prod) => prod.id === query);
-      if (p) {
-        setLines(ls => {
-          const lastLine = ls[ls.length - 1];
-          const newLine = {
-            productId: p.id,
-            quantity: "1",
-            rate: p.sellingPrice?.toString() ?? "",
-            gstRate: p.gstRate ?? 5
-          };
-
-          if (lastLine && !lastLine.productId && !lastLine.quantity) {
-            return [...ls.slice(0, -1), newLine];
-          }
-          return [...ls, newLine];
-        });
-        setScannerInput("");
-        setError(null);
-      } else {
-        setError(`QR Code / Product ID not found: ${query}`);
-      }
-    }
-  };
 
   // Live totals calculation
   const isInterState = customerStateCode && customerStateCode !== SHOP_STATE_CODE;
@@ -277,21 +247,10 @@ export function InvoiceForm({ products, customers }: InvoiceFormProps) {
           </Button>
         </div>
 
-        <div className="relative mb-2">
-          <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            id="scanner-input"
-            placeholder="Scan Fabric QR Code or enter Product ID... (Press Enter)"
-            className="pl-9 bg-muted/20 focus-visible:bg-background border-primary/20 focus-visible:border-primary/50 transition-colors"
-            value={scannerInput}
-            onChange={(e) => setScannerInput(e.target.value)}
-            onKeyDown={handleScannerKey}
-          />
-        </div>
 
         {/* Header */}
         <div className="grid gap-2 text-xs text-muted-foreground font-medium px-1"
-          style={{ gridTemplateColumns: "1fr 90px 90px" + (isGST ? " 70px" : "") + " 100px 36px" }}>
+          style={{ gridTemplateColumns: "2.5fr 90px 90px" + (isGST ? " 70px" : "") + " 100px 36px" }}>
           <span>Product</span><span>Qty</span><span>Rate (₹)</span>
           {isGST && <span>GST%</span>}
           <span className="text-right">Amount</span>
@@ -304,10 +263,19 @@ export function InvoiceForm({ products, customers }: InvoiceFormProps) {
             const product = products.find((p) => p.id === line.productId);
             return (
               <div key={i} className="grid gap-2 items-center"
-                style={{ gridTemplateColumns: "1fr 90px 90px" + (isGST ? " 70px" : "") + " 100px 36px" }}>
-                <div className="h-9 px-3 flex items-center border border-border/50 rounded-md bg-muted/20 text-sm truncate text-foreground font-medium">
-                  {line.productId ? products.find((p) => p.id === line.productId)?.name : "Scan to add fabric..."}
-                </div>
+                style={{ gridTemplateColumns: "2.5fr 90px 90px" + (isGST ? " 70px" : "") + " 100px 36px" }}>
+                <Select value={line.productId} onValueChange={(v) => handleProductSelect(i, v)}>
+                  <SelectTrigger className="h-9 w-full text-sm truncate">
+                    <SelectValue placeholder="Select fabric..." />
+                  </SelectTrigger>
+                  <SelectContent className="min-w-[450px]">
+                    {products.map((p) => (
+                      <SelectItem key={p.id} value={p.id} className="pr-4">
+                        <span className="font-semibold">{p.name}</span> {p.productCode ? `(${p.productCode})` : ""} {p.color ? `· ${p.color}` : ""} · Stock: {p.currentStock} {p.unit} · ₹{p.sellingPrice}/{p.unit}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Input className="h-9 text-sm" type="number" step="0.01" min="0.01" max={product?.currentStock} placeholder="0"
                   value={line.quantity} onChange={(e) => updateLine(i, { quantity: e.target.value })} />
                 <Input className="h-9 text-sm" type="number" step="0.01" min="0" placeholder="0"
