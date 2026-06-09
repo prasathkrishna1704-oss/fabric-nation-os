@@ -150,9 +150,7 @@ export async function createInvoice(data: {
     return inv;
   });
 
-  revalidatePath("/billing");
-  revalidatePath("/inventory");
-  revalidatePath("/");
+  revalidatePath("/", "layout");
 
   return invoice;
 }
@@ -333,15 +331,12 @@ export async function updateInvoice(
   });
 
   try {
-    revalidatePath("/billing");
-    revalidatePath(`/billing/${id}`);
-    revalidatePath("/inventory");
-    revalidatePath("/");
+    revalidatePath("/", "layout");
   } catch (e) {
     console.error("Revalidation error:", e);
   }
 
-  return { success: true, id: invoice };
+  return { success: true, id };
 }
 
 export async function getInvoices(filters?: {
