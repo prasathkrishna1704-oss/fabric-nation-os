@@ -6,7 +6,7 @@ import { createInvoice } from "@/actions/billing";
 import { calculateLineItemGST, SHOP_STATE_CODE } from "@/lib/gst-engine";
 import { formatCurrency, PAYMENT_METHODS, UNIT_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,8 +14,66 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, FileText, Receipt, ScanBarcode } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Loader2, Plus, Trash2, FileText, Receipt, ChevronsUpDown, Check } from "lucide-react";
 import type { Product, Customer } from "@generated/prisma";
+
+function ProductCombobox({ products, value, onChange }: { products: Product[], value: string, onChange: (val: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selectedProduct = products.find((p) => p.id === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger 
+        role="combobox"
+        aria-expanded={open}
+        className={cn(buttonVariants({ variant: "outline" }), "h-9 w-full justify-between px-3 text-sm font-normal bg-transparent truncate")}
+      >
+        {selectedProduct ? (
+          <span className="truncate">{selectedProduct.name} {selectedProduct.productCode ? `(${selectedProduct.productCode})` : ""}</span>
+        ) : (
+          <span className="text-muted-foreground">Select fabric...</span>
+        )}
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </PopoverTrigger>
+      <PopoverContent className="w-[450px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search fabric name or code..." />
+          <CommandList>
+            <CommandEmpty>No fabric found.</CommandEmpty>
+            <CommandGroup>
+              {products.map((p) => (
+                <CommandItem
+                  key={p.id}
+                  value={`${p.name} ${p.productCode || ""} ${p.color || ""}`}
+                  onSelect={() => {
+                    onChange(p.id === value ? "" : p.id);
+                    setOpen(false);
+                  }}
+                  className="pr-4"
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === p.id ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-semibold">{p.name} {p.productCode ? `(${p.productCode})` : ""}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {p.color ? `${p.color} · ` : ""} Stock: {p.currentStock} {p.unit} · ₹{p.sellingPrice}/{p.unit}
+                    </span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface LineItem {
   productId: string;
@@ -264,18 +322,11 @@ export function InvoiceForm({ products, customers }: InvoiceFormProps) {
             return (
               <div key={i} className="grid gap-2 items-center"
                 style={{ gridTemplateColumns: "2.5fr 90px 90px" + (isGST ? " 70px" : "") + " 100px 36px" }}>
-                <Select value={line.productId} onValueChange={(v) => handleProductSelect(i, v)}>
-                  <SelectTrigger className="h-9 w-full text-sm truncate">
-                    <SelectValue placeholder="Select fabric..." />
-                  </SelectTrigger>
-                  <SelectContent className="min-w-[450px]">
-                    {products.map((p) => (
-                      <SelectItem key={p.id} value={p.id} className="pr-4">
-                        <span className="font-semibold">{p.name}</span> {p.productCode ? `(${p.productCode})` : ""} {p.color ? `· ${p.color}` : ""} · Stock: {p.currentStock} {p.unit} · ₹{p.sellingPrice}/{p.unit}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ProductCombobox 
+                  products={products} 
+                  value={line.productId} 
+                  onChange={(v) => handleProductSelect(i, v)} 
+                />
                 <Input className="h-9 text-sm" type="number" step="0.01" min="0.01" max={product?.currentStock} placeholder="0"
                   value={line.quantity} onChange={(e) => updateLine(i, { quantity: e.target.value })} />
                 <Input className="h-9 text-sm" type="number" step="0.01" min="0" placeholder="0"
