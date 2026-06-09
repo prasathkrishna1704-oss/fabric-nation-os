@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createInvoice } from "@/actions/billing";
+import { createInvoice, updateInvoice } from "@/actions/billing";
 import { calculateLineItemGST, SHOP_STATE_CODE } from "@/lib/gst-engine";
 import { formatCurrency, PAYMENT_METHODS, UNIT_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Loader2, Plus, Trash2, FileText, Receipt, ChevronsUpDown, Check } from "lucide-react";
-import type { Product, Customer } from "@generated/prisma";
+import type { Product, Customer, Invoice, InvoiceItem } from "@generated/prisma";
 
 function ProductCombobox({ products, value, onChange }: { products: Product[], value: string, onChange: (val: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -85,29 +85,37 @@ interface LineItem {
 interface InvoiceFormProps {
   products: Product[];
   customers: Customer[];
+  initialData?: Invoice & { items: InvoiceItem[]; customer?: Customer | null };
 }
 
-export function InvoiceForm({ products, customers }: InvoiceFormProps) {
+export function InvoiceForm({ products, customers, initialData }: InvoiceFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [isGST, setIsGST] = useState(false);
-  const [customerId, setCustomerId] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerGstin, setCustomerGstin] = useState("");
-  const [customerStateCode, setCustomerStateCode] = useState(SHOP_STATE_CODE);
-  const [billingAddress, setBillingAddress] = useState("");
-  const [shippingAddress, setShippingAddress] = useState("");
-  const [hsnCode, setHsnCode] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("CASH");
-  const [paymentStatus, setPaymentStatus] = useState("PAID");
-  const [discountPercent, setDiscountPercent] = useState("0");
-  const [notes, setNotes] = useState("");
+  const [isGST, setIsGST] = useState(initialData?.type === "GST" || false);
+  const [customerId, setCustomerId] = useState(initialData?.customerId || "");
+  const [customerName, setCustomerName] = useState(initialData?.customerName || "");
+  const [customerPhone, setCustomerPhone] = useState(initialData?.customerPhone || "");
+  const [customerGstin, setCustomerGstin] = useState(initialData?.customerGstin || "");
+  const [customerStateCode, setCustomerStateCode] = useState(initialData?.customer?.stateCode || SHOP_STATE_CODE);
+  const [billingAddress, setBillingAddress] = useState(initialData?.billingAddress || "");
+  const [shippingAddress, setShippingAddress] = useState(initialData?.shippingAddress || "");
+  const [hsnCode, setHsnCode] = useState(initialData?.items?.[0]?.hsnCode || "");
+  const [paymentMethod, setPaymentMethod] = useState(initialData?.paymentMethod || "CASH");
+  const [paymentStatus, setPaymentStatus] = useState(initialData?.paymentStatus || "PAID");
+  const [discountPercent, setDiscountPercent] = useState(initialData?.discountPercent?.toString() || "0");
+  const [notes, setNotes] = useState(initialData?.notes || "");
   const [error, setError] = useState<string | null>(null);
-  const [lines, setLines] = useState<LineItem[]>([
-    { productId: "", quantity: "", rate: "", gstRate: 5 },
-  ]);
+  const [lines, setLines] = useState<LineItem[]>(
+    initialData?.items?.length
+      ? initialData.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity.toString(),
+          rate: item.rate.toString(),
+          gstRate: item.gstRate,
+        }))
+      : [{ productId: "", quantity: "", rate: "", gstRate: 5 }]
+  );
 
   // When a known customer is selected, autofill fields
   const handleCustomerSelect = (id: string | null) => {
@@ -182,16 +190,20 @@ export function InvoiceForm({ products, customers }: InvoiceFormProps) {
     // Check stock
     for (const l of validLines) {
       const p = products.find((p) => p.id === l.productId);
-      if (p && parseFloat(l.quantity) > p.currentStock) {
-        setError(`Insufficient stock for ${p.name}. Available: ${p.currentStock}`);
-        return;
+      if (p) {
+        const oldQty = initialData?.items.find((i) => i.productId === l.productId)?.quantity || 0;
+        const availableStock = p.currentStock + oldQty;
+        if (parseFloat(l.quantity) > availableStock) {
+          setError(`Insufficient stock for ${p.name}. Available: ${availableStock}`);
+          return;
+        }
       }
     }
 
     startTransition(async () => {
       try {
-        const invoice = await createInvoice({
-          type: isGST ? "GST" : "NON_GST",
+        const payload = {
+          type: isGST ? "GST" : ("NON_GST" as const),
           customerId: customerId || undefined,
           customerName: customerName || undefined,
           customerPhone: customerPhone || undefined,
@@ -210,8 +222,15 @@ export function InvoiceForm({ products, customers }: InvoiceFormProps) {
           paymentMethod,
           paymentStatus,
           notes: notes || undefined,
-        });
-        router.push(`/billing/${invoice.id}`);
+        };
+
+        if (initialData) {
+          await updateInvoice(initialData.id, payload);
+          router.push(`/billing/${initialData.id}`);
+        } else {
+          const invoice = await createInvoice(payload);
+          router.push(`/billing/${invoice.id}`);
+        }
       } catch (err: any) {
         setError(err.message || "An error occurred");
       }
@@ -451,7 +470,7 @@ export function InvoiceForm({ products, customers }: InvoiceFormProps) {
             {error && <div className="text-sm font-medium text-destructive mb-3">{error}</div>}
             <Button type="submit" className="w-full gap-2" disabled={isPending || !lines.some((l) => l.productId && l.quantity && l.rate)}>
               {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : isGST ? <Receipt className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
-              {isPending ? "Creating..." : isGST ? "Create GST Invoice" : "Create Cash Bill"}
+              {isPending ? "Saving..." : initialData ? "Save Changes" : isGST ? "Create GST Invoice" : "Create Cash Bill"}
             </Button>
           </div>
         </div>

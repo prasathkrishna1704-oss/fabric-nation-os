@@ -22,28 +22,7 @@ const statusStyles: Record<string, string> = {
   UNPAID: "bg-red-50 text-red-700 border-red-200",
 };
 
-function numberToWords(num: number): string {
-  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
-    'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
-  if (num === 0) return 'Zero';
-
-  function convert(n: number): string {
-    if (n < 20) return ones[n];
-    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
-    if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' and ' + convert(n % 100) : '');
-    if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '');
-    if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '');
-    return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
-  }
-
-  const rupees = Math.floor(num);
-  const paise = Math.round((num - rupees) * 100);
-  let result = 'Rupees ' + convert(rupees);
-  if (paise > 0) result += ' and ' + convert(paise) + ' Paise';
-  return result + ' Only';
-}
 
 export function InvoicePreview({ invoice }: InvoicePreviewProps) {
   const isGST = invoice.type === "GST";
@@ -88,7 +67,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             <span className="text-[#C80018]">Fabric</span> Nation
           </h1>
           <p className="text-xs text-[#4B4E53] mt-1">No.46 Rice mill compound, Alangadu, Karuvampalayam, Tirupur,Tamil Nadu - 641604</p>
-          <p className="text-xs text-[#4B4E53]">Ph: 9876543210 · Email: info@fabricnation.com</p>
+          <p className="text-xs text-[#4B4E53]">Ph: +91 8248158549 · Email: info@fabricnation.in</p>
           <div className="mt-3 inline-block border border-[#1D1E27] px-6 py-1">
             <p className="text-sm font-bold text-[#1D1E27] tracking-wider uppercase">
               {isGST ? "Tax Invoice" : "Cash Memo / Estimate"}
@@ -253,28 +232,6 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
           </table>
         </div>
 
-        {/* ─── Amount in Words & Bank Details ─── */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="border border-[#D8DEE4] p-2.5 bg-[#FAFBFC] flex flex-col justify-center">
-            <p className="text-xs text-[#1D1E27]">
-              <span className="font-bold">Rupees :</span>{" "}
-              <span className="italic">{numberToWords(invoice.totalAmount)}</span>
-            </p>
-          </div>
-          <div className="border border-[#D8DEE4] p-2.5 bg-[#FAFBFC]">
-            <p className="font-bold text-[#1D1E27] text-xs mb-1 underline">Bank Details :</p>
-            <div className="grid grid-cols-[60px_1fr] gap-x-2 gap-y-0.5 mt-1">
-              <span className="text-[10px] font-medium text-[#1D1E27]">Bank Name</span>
-              <span className="text-[10px] text-[#4B4E53]">: HDFC Bank</span>
-              <span className="text-[10px] font-medium text-[#1D1E27]">A/c No.</span>
-              <span className="text-[10px] font-bold text-[#1D1E27]">: 50200012345678</span>
-              <span className="text-[10px] font-medium text-[#1D1E27]">IFSC Code</span>
-              <span className="text-[10px] text-[#4B4E53]">: HDFC0001234</span>
-              <span className="text-[10px] font-medium text-[#1D1E27]">Branch</span>
-              <span className="text-[10px] text-[#4B4E53]">: Tirupur</span>
-            </div>
-          </div>
-        </div>
 
         {/* ─── Terms & Signature ─── */}
         <div className="grid grid-cols-2 gap-6 text-[10px] text-[#4B4E53] mb-4">
