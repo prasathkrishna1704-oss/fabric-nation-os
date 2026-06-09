@@ -143,6 +143,9 @@ export async function createPurchase(data: {
     }
 
     return pur;
+  }, {
+    maxWait: 5000,
+    timeout: 20000,
   });
 
   revalidatePath("/purchases");

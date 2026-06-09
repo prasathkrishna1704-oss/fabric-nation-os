@@ -148,6 +148,9 @@ export async function createInvoice(data: {
     }
 
     return inv;
+  }, {
+    maxWait: 5000,
+    timeout: 20000,
   });
 
   revalidatePath("/", "layout");
@@ -328,6 +331,9 @@ export async function updateInvoice(
     });
 
     return updatedInv.id;
+  }, {
+    maxWait: 5000,
+    timeout: 20000,
   });
 
   try {
@@ -426,6 +432,9 @@ export async function deleteInvoice(id: string) {
 
     // Delete invoice (cascade deletes items)
     await tx.invoice.delete({ where: { id } });
+  }, {
+    maxWait: 5000,
+    timeout: 15000,
   });
 
   revalidatePath("/billing");
