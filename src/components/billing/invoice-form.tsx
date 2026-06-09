@@ -225,8 +225,10 @@ export function InvoiceForm({ products, customers, initialData }: InvoiceFormPro
         };
 
         if (initialData) {
-          await updateInvoice(initialData.id, payload);
-          router.push(`/billing/${initialData.id}`);
+          const res = await updateInvoice(initialData.id, payload);
+          if (res.success) {
+            router.push(`/billing/${initialData.id}`);
+          }
         } else {
           const invoice = await createInvoice(payload);
           router.push(`/billing/${invoice.id}`);

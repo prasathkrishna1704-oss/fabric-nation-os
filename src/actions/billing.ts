@@ -329,15 +329,19 @@ export async function updateInvoice(
       include: { items: true },
     });
 
-    return updatedInv;
+    return updatedInv.id;
   });
 
-  revalidatePath("/billing");
-  revalidatePath(`/billing/${id}`);
-  revalidatePath("/inventory");
-  revalidatePath("/");
+  try {
+    revalidatePath("/billing");
+    revalidatePath(`/billing/${id}`);
+    revalidatePath("/inventory");
+    revalidatePath("/");
+  } catch (e) {
+    console.error("Revalidation error:", e);
+  }
 
-  return invoice;
+  return { success: true, id: invoice };
 }
 
 export async function getInvoices(filters?: {
