@@ -203,7 +203,7 @@ export function InvoiceForm({ products, customers, initialData }: InvoiceFormPro
     startTransition(async () => {
       try {
         const payload = {
-          type: isGST ? "GST" : ("NON_GST" as const),
+          type: (isGST ? "GST" : "NON_GST") as "GST" | "NON_GST",
           customerId: customerId || undefined,
           customerName: customerName || undefined,
           customerPhone: customerPhone || undefined,
