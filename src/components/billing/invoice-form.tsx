@@ -227,11 +227,11 @@ export function InvoiceForm({ products, customers, initialData }: InvoiceFormPro
         if (initialData) {
           const res = await updateInvoice(initialData.id, payload);
           if (res.success) {
-            router.push(`/billing/${initialData.id}`);
+            window.location.href = `/billing/${initialData.id}`;
           }
         } else {
           const invoice = await createInvoice(payload);
-          router.push(`/billing/${invoice.id}`);
+          window.location.href = `/billing/${invoice.id}`;
         }
       } catch (err: any) {
         setError(err.message || "An error occurred");
