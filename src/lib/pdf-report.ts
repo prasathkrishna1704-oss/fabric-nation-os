@@ -219,11 +219,11 @@ function appendFullInvoices(doc: jsPDF, data: ReportData, isGST: boolean) {
         ...(inv.discountAmount > 0 ? [["Discount", `- ${fmt(inv.discountAmount)}`]] : []),
         ...(inv.type === "GST" && inv.igstAmount === 0 && inv.sgstAmount > 0 ? [["SGST", fmt(inv.sgstAmount)], ["CGST", fmt(inv.cgstAmount)]] : []),
         ...(inv.type === "GST" && inv.igstAmount > 0 ? [["IGST", fmt(inv.igstAmount)]] : []),
-        [{ content: "Grand Total", styles: { fontStyle: "bold" } }, { content: fmt(inv.totalAmount), styles: { fontStyle: "bold", textColor: [200, 0, 24] } }],
+        [{ content: "Grand Total", styles: { fontStyle: "bold" as const } }, { content: fmt(inv.totalAmount), styles: { fontStyle: "bold" as const, textColor: [200, 0, 24] } }],
         // Partial payments
         ...((inv as any).paymentStatus !== "PAID" && (inv as any).amountPaid > 0 ? [["Amount Paid", fmt((inv as any).amountPaid)]] : []),
-        ...((inv as any).paymentStatus !== "PAID" && (inv as any).balanceAmount > 0 ? [[{ content: "Balance Amount", styles: { fontStyle: "bold" } }, { content: fmt((inv as any).balanceAmount), styles: { fontStyle: "bold", textColor: [200, 0, 24] } }]] : []),
-      ],
+        ...((inv as any).paymentStatus !== "PAID" && (inv as any).balanceAmount > 0 ? [[{ content: "Balance Amount", styles: { fontStyle: "bold" as const } }, { content: fmt((inv as any).balanceAmount), styles: { fontStyle: "bold" as const, textColor: [200, 0, 24] } }]] : []),
+      ] as any[],
       margin: { left: 120, right: 14 },
     });
 
