@@ -195,6 +195,14 @@ function appendFullInvoices(doc: jsPDF, data: ReportData, isGST: boolean) {
       bodyStyles: { fontSize: 8, textColor: [29, 30, 39] },
       head: [["S.No.", "Description of Goods", "HSN/SAC", "Quantity", "Unit", "Rate", "Amount (Rs.)"]],
       body: itemsBody,
+      foot: [
+        [
+          { content: "Total Purchased Weight / Quantity:", colSpan: 3, styles: { halign: "right", fontStyle: "bold" } },
+          { content: inv.items.reduce((sum, item) => sum + item.quantity, 0).toFixed(2), styles: { fontStyle: "bold" } },
+          { content: "", colSpan: 3 }
+        ]
+      ],
+      footStyles: { fillColor: [237, 242, 244], textColor: [29, 30, 39], fontStyle: "bold", fontSize: 8 },
       margin: { left: 14, right: 14 },
     });
 

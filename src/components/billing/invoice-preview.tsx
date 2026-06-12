@@ -180,6 +180,16 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 <td className="border border-[#D8DEE4] px-2 py-2.5"></td>
               </tr>
             ))}
+            {/* Totals Row */}
+            <tr className="bg-[#EDF2F4]">
+              <td className="border border-[#D8DEE4] px-2 py-2.5 font-bold text-[#1D1E27] text-right" colSpan={3}>
+                Total Purchased Weight / Quantity:
+              </td>
+              <td className="border border-[#D8DEE4] px-2 py-2.5 text-center font-bold text-[#1D1E27]">
+                {invoice.items.reduce((sum, item) => sum + item.quantity, 0).toFixed(2)}
+              </td>
+              <td className="border border-[#D8DEE4] px-2 py-2.5" colSpan={3}></td>
+            </tr>
           </tbody>
         </table>
 

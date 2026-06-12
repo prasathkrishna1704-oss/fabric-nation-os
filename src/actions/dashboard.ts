@@ -111,13 +111,18 @@ export async function getDashboardData() {
         createdAt: { gte: startOfMonth },
       },
     },
+    include: {
+      product: true,
+    },
   });
 
-  const productSales: Record<string, { name: string; qty: number; revenue: number }> = {};
+  const productSales: Record<string, { name: string; code?: string; color?: string; qty: number; revenue: number }> = {};
   for (const item of monthItems) {
     if (!productSales[item.productId]) {
       productSales[item.productId] = {
         name: item.productName,
+        code: item.product?.productCode || undefined,
+        color: item.product?.color || undefined,
         qty: 0,
         revenue: 0,
       };

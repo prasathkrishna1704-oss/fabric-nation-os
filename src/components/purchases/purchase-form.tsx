@@ -280,7 +280,12 @@ export function PurchaseForm({ products, suppliers }: PurchaseFormProps) {
               <div key={i} className="grid gap-2 items-center"
                 style={{ gridTemplateColumns: "1fr 90px 90px" + (isGST ? " 70px" : "") + " 100px 36px" }}>
                 <div className="h-9 px-3 flex items-center border border-border/50 rounded-md bg-muted/20 text-sm truncate text-foreground font-medium">
-                  {line.productId ? products.find((p) => p.id === line.productId)?.name : "Scan to add fabric..."}
+                  {(() => {
+                    if (!line.productId) return "Scan to add fabric...";
+                    const p = products.find((prod) => prod.id === line.productId);
+                    if (!p) return "Unknown fabric";
+                    return `${p.name}${p.productCode ? ` (${p.productCode})` : ""}${p.color ? ` - ${p.color}` : ""}`;
+                  })()}
                 </div>
                 <Input className="h-9 text-sm" type="number" step="0.01" min="0.01" placeholder="0"
                   value={line.quantity} onChange={(e) => updateLine(i, { quantity: e.target.value })} />

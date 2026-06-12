@@ -91,7 +91,7 @@ export function SalesChart({ data }: SalesChartProps) {
 }
 
 interface TopProductsChartProps {
-  data: { name: string; revenue: number; qty: number }[];
+  data: { name: string; code?: string; color?: string; revenue: number; qty: number }[];
 }
 
 export function TopProductsChart({ data }: TopProductsChartProps) {
@@ -111,11 +111,13 @@ export function TopProductsChart({ data }: TopProductsChartProps) {
         const percentage = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
         const color = barColors[i % barColors.length];
 
+        const fullName = `${item.name}${item.code ? ` (${item.code})` : ""}${item.color ? ` - ${item.color}` : ""}`;
+
         return (
           <div key={`${item.name}-${i}`} className="group">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-[#4B4E53] truncate max-w-[140px]">{item.name}</span>
-              <span className={`text-xs font-bold ${color.text}`}>{formatCurrency(item.revenue)}</span>
+            <div className="flex items-start justify-between mb-1.5 gap-2">
+              <span className="text-xs font-medium text-[#4B4E53] leading-snug" title={fullName}>{fullName}</span>
+              <span className={`text-xs font-bold ${color.text} shrink-0`}>{formatCurrency(item.revenue)}</span>
             </div>
             <div className="h-2 rounded-full bg-[#EDF2F4] overflow-hidden">
               <div

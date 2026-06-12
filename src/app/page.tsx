@@ -40,6 +40,7 @@ export default async function DashboardPage() {
         totalStockValue={data.totalStockValue}
         totalProducts={data.totalProducts}
         lowStockCount={data.lowStockProducts.length}
+        totalStockUnits={data.totalStockUnits}
       />
 
       {/* Charts Row */}

@@ -44,7 +44,11 @@ export function LowStockAlert({ products }: LowStockAlertProps) {
 
             {/* Product info */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#1D1E27] truncate">{product.name}</p>
+              <p className="text-sm font-semibold text-[#1D1E27] truncate" title={`${product.name}${product.productCode ? ` (${product.productCode})` : ""}${product.color ? ` - ${product.color}` : ""}`}>
+                {product.name}
+                {product.productCode ? ` (${product.productCode})` : ""}
+                {product.color ? ` - ${product.color}` : ""}
+              </p>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-[11px] text-[#4B4E53]/60">{product.category}</p>
                 {/* Mini progress bar */}

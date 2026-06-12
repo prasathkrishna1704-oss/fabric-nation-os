@@ -109,6 +109,7 @@ interface KpiCardsProps {
   totalStockValue: number;
   totalProducts: number;
   lowStockCount: number;
+  totalStockUnits: number;
 }
 
 export function KpiCards({
@@ -120,6 +121,7 @@ export function KpiCards({
   totalStockValue,
   totalProducts,
   lowStockCount,
+  totalStockUnits,
 }: KpiCardsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -150,7 +152,7 @@ export function KpiCards({
       <KpiCard
         title="Stock Value"
         value={formatCurrency(totalStockValue)}
-        subtitle={`${totalProducts} products · ${lowStockCount} low stock`}
+        subtitle={`${totalProducts} products · ${totalStockUnits.toLocaleString("en-IN", { maximumFractionDigits: 2 })} Total Wt · ${lowStockCount} low`}
         icon={lowStockCount > 0 ? AlertTriangle : Package}
         variant={lowStockCount > 0 ? "amber" : "gray"}
         stagger="stagger-4"

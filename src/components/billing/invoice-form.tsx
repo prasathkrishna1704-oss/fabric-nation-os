@@ -31,7 +31,11 @@ function ProductCombobox({ products, value, onChange }: { products: Product[], v
         className={cn(buttonVariants({ variant: "outline" }), "h-9 w-full justify-between px-3 text-sm font-normal bg-transparent truncate")}
       >
         {selectedProduct ? (
-          <span className="truncate">{selectedProduct.name} {selectedProduct.productCode ? `(${selectedProduct.productCode})` : ""}</span>
+          <span className="truncate">
+            {selectedProduct.name}
+            {selectedProduct.productCode ? ` (${selectedProduct.productCode})` : ""}
+            {selectedProduct.color ? ` - ${selectedProduct.color}` : ""}
+          </span>
         ) : (
           <span className="text-muted-foreground">Select fabric...</span>
         )}
