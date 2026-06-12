@@ -28,6 +28,13 @@ export interface ReportInvoice {
     sgst: number;
     igst: number;
     amount: number;
+    product?: {
+      productCode: string | null;
+      category: string | null;
+      fabricType: string | null;
+      color: string | null;
+      gsm: string | null;
+    } | null;
   }[];
 }
 
@@ -51,7 +58,9 @@ export async function getReportData(period: "daily" | "weekly" | "monthly") {
       createdAt: { gte: startDate },
     },
     include: {
-      items: true,
+      items: {
+        include: { product: true }
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -64,7 +73,7 @@ export async function getReportData(period: "daily" | "weekly" | "monthly") {
   const totalDiscount = invoices.reduce((sum, inv) => sum + inv.discountAmount, 0);
 
   const gstInvoices = invoices.filter((inv) => inv.type === "GST");
-  const nonGstInvoices = invoices.filter((inv) => inv.type === "NON_GST");
+  const nonGstInvoices = invoices.filter((inv) => inv.type !== "GST");
   const paidInvoices = invoices.filter((inv) => inv.paymentStatus === "PAID");
   const unpaidInvoices = invoices.filter((inv) => inv.paymentStatus === "UNPAID");
 

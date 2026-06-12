@@ -147,7 +147,20 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             {itemsWithTaxable.map((item, i) => (
               <tr key={item.id}>
                 <td className="border border-[#D8DEE4] px-2 py-2.5 text-center text-[#4B4E53]">{i + 1}</td>
-                <td className="border border-[#D8DEE4] px-2 py-2.5 font-medium text-[#1D1E27]">{item.productName}</td>
+                <td className="border border-[#D8DEE4] px-2 py-2.5 font-medium text-[#1D1E27]">
+                  <div>{item.productName}</div>
+                  {!isGST && item.product && (
+                    <div className="text-[10px] text-[#4B4E53] font-normal mt-0.5">
+                      {[
+                        item.product.productCode ? `Code: ${item.product.productCode}` : null,
+                        item.product.category,
+                        item.product.fabricType,
+                        item.product.color,
+                        item.product.gsm ? `${item.product.gsm} GSM` : null,
+                      ].filter(Boolean).join(" • ")}
+                    </div>
+                  )}
+                </td>
                 <td className="border border-[#D8DEE4] px-2 py-2.5 text-center font-mono text-[#4B4E53]">{item.hsnCode || "—"}</td>
                 <td className="border border-[#D8DEE4] px-2 py-2.5 text-center text-[#1D1E27]">{item.quantity}</td>
                 <td className="border border-[#D8DEE4] px-2 py-2.5 text-center text-[#4B4E53]">{item.unit}</td>

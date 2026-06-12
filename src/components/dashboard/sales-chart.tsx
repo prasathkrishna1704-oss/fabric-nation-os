@@ -112,7 +112,7 @@ export function TopProductsChart({ data }: TopProductsChartProps) {
         const color = barColors[i % barColors.length];
 
         return (
-          <div key={item.name} className="group">
+          <div key={`${item.name}-${i}`} className="group">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-medium text-[#4B4E53] truncate max-w-[140px]">{item.name}</span>
               <span className={`text-xs font-bold ${color.text}`}>{formatCurrency(item.revenue)}</span>

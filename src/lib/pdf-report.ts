@@ -47,6 +47,13 @@ interface ReportInvoice {
     sgst: number;
     igst: number;
     amount: number;
+    product?: {
+      productCode: string | null;
+      category: string | null;
+      fabricType: string | null;
+      color: string | null;
+      gsm: string | null;
+    } | null;
   }[];
 }
 
@@ -156,15 +163,30 @@ function appendFullInvoices(doc: jsPDF, data: ReportData, isGST: boolean) {
     y += 30;
 
     // Items
-    const itemsBody = inv.items.map((item, i) => [
-      i + 1,
-      item.productName,
-      item.hsnCode || "—",
-      item.quantity,
-      item.unit,
-      fmt(item.rate),
-      fmt(item.quantity * item.rate)
-    ]);
+    const itemsBody = inv.items.map((item, i) => {
+      let description = item.productName;
+      if (inv.type === "NON_GST" && item.product) {
+        const details = [
+          item.product.productCode ? `Code: ${item.product.productCode}` : null,
+          item.product.category,
+          item.product.fabricType,
+          item.product.color,
+          item.product.gsm ? `${item.product.gsm} GSM` : null,
+        ].filter(Boolean).join(" • ");
+        if (details) {
+          description = `${item.productName}\n${details}`;
+        }
+      }
+      return [
+        i + 1,
+        description,
+        item.hsnCode || "—",
+        item.quantity,
+        item.unit,
+        fmt(item.rate),
+        fmt(item.quantity * item.rate)
+      ];
+    });
 
     autoTable(doc, {
       startY: y,
@@ -322,12 +344,13 @@ export function generatePDFWithGST(data: ReportData) {
     headStyles: { fillColor: [29, 30, 39], textColor: 255, fontStyle: "bold", fontSize: 7 },
     bodyStyles: { fontSize: 7, textColor: [29, 30, 39] },
     alternateRowStyles: { fillColor: [245, 247, 249] },
-    head: [["Invoice", "Date", "Customer", "Type", "Subtotal", "SGST", "CGST", "IGST", "Total", "Status"]],
-    body: gstInvoices.map((inv) => [
+    head: [["S.No.", "Invoice", "Date", "Customer", "Type", "Subtotal", "SGST", "CGST", "IGST", "Total", "Status"]],
+    body: gstInvoices.map((inv, index) => [
+      index + 1,
       inv.invoiceNumber,
       fmtDate(inv.createdAt),
       inv.customerName || "Walk-in",
-      inv.type === "GST" ? "GST" : "Cash",
+      inv.type === "GST" ? "GST" : "Non-GST",
       fmt(inv.subtotal),
       fmt(inv.sgstAmount),
       fmt(inv.cgstAmount),
@@ -348,9 +371,11 @@ export function generatePDFWithGST(data: ReportData) {
   y += 3;
 
   const itemRows: string[][] = [];
+  let itemCounter = 1;
   for (const inv of gstInvoices) {
     for (const item of inv.items) {
       itemRows.push([
+        String(itemCounter++),
         inv.invoiceNumber,
         item.productName,
         item.hsnCode || "—",
@@ -373,7 +398,7 @@ export function generatePDFWithGST(data: ReportData) {
     headStyles: { fillColor: [29, 30, 39], textColor: 255, fontStyle: "bold", fontSize: 6.5 },
     bodyStyles: { fontSize: 6.5, textColor: [29, 30, 39] },
     alternateRowStyles: { fillColor: [245, 247, 249] },
-    head: [["Invoice", "Product", "HSN", "Qty", "Unit", "Rate", "Taxable", "GST%", "SGST", "CGST", "IGST", "Total"]],
+    head: [["S.No.", "Invoice", "Product", "HSN", "Qty", "Unit", "Rate", "Taxable", "GST%", "SGST", "CGST", "IGST", "Total"]],
     body: itemRows,
     margin: { left: 14, right: 14 },
   });
@@ -399,8 +424,8 @@ export function generatePDFWithGST(data: ReportData) {
 export function generatePDFWithoutGST(data: ReportData) {
   const doc = new jsPDF("p", "mm", "a4");
 
-  // Filter for NON-GST invoices only
-  const nonGstInvoices = data.invoices.filter(inv => inv.type === "NON_GST");
+  // Filter for NON-GST invoices only (fallback catch-all for any non-GST type)
+  const nonGstInvoices = data.invoices.filter(inv => inv.type !== "GST");
   
   // Calculate summary for NON-GST invoices only
   const totalSubtotal = nonGstInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
@@ -448,12 +473,13 @@ export function generatePDFWithoutGST(data: ReportData) {
     headStyles: { fillColor: [29, 30, 39], textColor: 255, fontStyle: "bold", fontSize: 7 },
     bodyStyles: { fontSize: 7, textColor: [29, 30, 39] },
     alternateRowStyles: { fillColor: [245, 247, 249] },
-    head: [["Invoice", "Date", "Customer", "Type", "Amount", "Discount", "Net Amount", "Payment", "Status"]],
-    body: nonGstInvoices.map((inv) => [
+    head: [["S.No.", "Invoice", "Date", "Customer", "Type", "Amount", "Discount", "Net Amount", "Payment", "Status"]],
+    body: nonGstInvoices.map((inv, index) => [
+      index + 1,
       inv.invoiceNumber,
       fmtDate(inv.createdAt),
       inv.customerName || "Walk-in",
-      inv.type === "GST" ? "GST" : "Cash",
+      inv.type === "GST" ? "GST" : "Non-GST",
       fmt(inv.subtotal),
       fmt(inv.discountAmount),
       fmt(inv.subtotal - inv.discountAmount),
@@ -473,11 +499,26 @@ export function generatePDFWithoutGST(data: ReportData) {
   y += 3;
 
   const itemRows: string[][] = [];
+  let itemCounter = 1;
   for (const inv of nonGstInvoices) {
     for (const item of inv.items) {
+      let description = item.productName;
+      if (item.product) {
+        const details = [
+          item.product.productCode ? `Code: ${item.product.productCode}` : null,
+          item.product.category,
+          item.product.fabricType,
+          item.product.color,
+          item.product.gsm ? `${item.product.gsm} GSM` : null,
+        ].filter(Boolean).join(" • ");
+        if (details) {
+          description = `${item.productName}\n${details}`;
+        }
+      }
       itemRows.push([
+        String(itemCounter++),
         inv.invoiceNumber,
-        item.productName,
+        description,
         String(item.quantity),
         item.unit,
         fmt(item.rate),
@@ -492,7 +533,7 @@ export function generatePDFWithoutGST(data: ReportData) {
     headStyles: { fillColor: [29, 30, 39], textColor: 255, fontStyle: "bold", fontSize: 7 },
     bodyStyles: { fontSize: 7, textColor: [29, 30, 39] },
     alternateRowStyles: { fillColor: [245, 247, 249] },
-    head: [["Invoice", "Product", "Qty", "Unit", "Rate", "Amount"]],
+    head: [["S.No.", "Invoice", "Product", "Qty", "Unit", "Rate", "Amount"]],
     body: itemRows,
     margin: { left: 14, right: 14 },
   });

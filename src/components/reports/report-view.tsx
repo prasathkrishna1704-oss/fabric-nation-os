@@ -216,6 +216,7 @@ export function ReportView({ data, activePeriod }: ReportViewProps) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#E5EAF0]">
+                  <th className="text-left text-[#4B4E53] font-semibold py-2 pr-3 w-10">S.No.</th>
                   <th className="text-left text-[#4B4E53] font-semibold py-2 pr-3">Invoice</th>
                   <th className="text-left text-[#4B4E53] font-semibold py-2">Date</th>
                   <th className="text-left text-[#4B4E53] font-semibold py-2">Customer</th>
@@ -228,15 +229,16 @@ export function ReportView({ data, activePeriod }: ReportViewProps) {
                 </tr>
               </thead>
               <tbody>
-                {data.invoices.map((inv) => (
+                {data.invoices.map((inv, index) => (
                   <tr key={inv.invoiceNumber} className="border-b border-[#EDF2F4] hover:bg-[#FAFBFC] transition-colors">
+                    <td className="py-2.5 pr-3 text-[#4B4E53] text-center">{index + 1}</td>
                     <td className="py-2.5 pr-3 font-semibold text-[#1D1E27]">{inv.invoiceNumber}</td>
                     <td className="py-2.5 text-[#4B4E53]">{formatDate(inv.createdAt)}</td>
                     <td className="py-2.5 text-[#1D1E27]">{inv.customerName || "Walk-in"}</td>
                     <td className="py-2.5 text-center">
                       <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold ${
                         inv.type === "GST" ? "bg-[#C80018]/8 text-[#C80018]" : "bg-[#EDF2F4] text-[#4B4E53]"
-                      }`}>{inv.type === "GST" ? "GST" : "Cash"}</span>
+                      }`}>{inv.type === "GST" ? "GST" : "Non-GST"}</span>
                     </td>
                     <td className="py-2.5 text-right text-[#4B4E53]">{formatCurrency(inv.subtotal)}</td>
                     <td className="py-2.5 text-right text-[#4B4E53]">{formatCurrency(inv.sgstAmount + inv.cgstAmount + inv.igstAmount)}</td>
