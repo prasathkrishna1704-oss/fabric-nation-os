@@ -77,6 +77,8 @@ model Invoice {
   totalAmount     Float    @default(0) @map("total_amount")
   paymentMethod   String   @default("CASH") @map("payment_method") // CASH, UPI, CARD, CREDIT
   paymentStatus   String   @default("PAID") @map("payment_status") // PAID, PARTIAL, UNPAID
+  amountPaid      Float    @default(0) @map("amount_paid")
+  balanceAmount   Float    @default(0) @map("balance_amount")
   notes           String?
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")

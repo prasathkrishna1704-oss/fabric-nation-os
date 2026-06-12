@@ -107,6 +107,7 @@ export function InvoiceForm({ products, customers, initialData }: InvoiceFormPro
   const [hsnCode, setHsnCode] = useState(initialData?.items?.[0]?.hsnCode || "");
   const [paymentMethod, setPaymentMethod] = useState(initialData?.paymentMethod || "CASH");
   const [paymentStatus, setPaymentStatus] = useState(initialData?.paymentStatus || "PAID");
+  const [amountPaid, setAmountPaid] = useState(initialData?.amountPaid?.toString() || "");
   const [discountPercent, setDiscountPercent] = useState(initialData?.discountPercent?.toString() || "0");
   const [notes, setNotes] = useState(initialData?.notes || "");
   const [error, setError] = useState<string | null>(null);
@@ -225,6 +226,8 @@ export function InvoiceForm({ products, customers, initialData }: InvoiceFormPro
           discountPercent: parseFloat(discountPercent) || 0,
           paymentMethod,
           paymentStatus,
+          amountPaid: paymentStatus === "PAID" ? totalAmount : paymentStatus === "UNPAID" ? 0 : parseFloat(amountPaid) || 0,
+          balanceAmount: paymentStatus === "PAID" ? 0 : paymentStatus === "UNPAID" ? totalAmount : totalAmount - (parseFloat(amountPaid) || 0),
           notes: notes || undefined,
         };
 
@@ -427,6 +430,18 @@ export function InvoiceForm({ products, customers, initialData }: InvoiceFormPro
               ))}
             </div>
           </div>
+          {paymentStatus === "PARTIAL" && (
+            <div className="space-y-1.5 animate-slide-up">
+              <Label htmlFor="amount-paid">Amount Paid</Label>
+              <div className="flex gap-2 items-center">
+                <Input id="amount-paid" type="number" min="0" max={totalAmount} step="0.01" placeholder="0.00"
+                  value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} />
+                <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                  Balance: {formatCurrency(totalAmount - (parseFloat(amountPaid) || 0))}
+                </span>
+              </div>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="discount">Discount (%)</Label>
             <Input id="discount" type="number" min="0" max="100" step="0.5" placeholder="0"

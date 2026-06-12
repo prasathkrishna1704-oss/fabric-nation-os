@@ -27,6 +27,8 @@ export async function createInvoice(data: {
   discountPercent: number;
   paymentMethod: string;
   paymentStatus: string;
+  amountPaid: number;
+  balanceAmount: number;
   notes?: string;
 }) {
   const invoiceNumber = await generateInvoiceNumber(data.type);
@@ -114,6 +116,8 @@ export async function createInvoice(data: {
         totalAmount,
         paymentMethod: data.paymentMethod,
         paymentStatus: data.paymentStatus,
+        amountPaid: data.amountPaid,
+        balanceAmount: data.balanceAmount,
         notes: data.notes || null,
         items: {
           create: lineItems,
@@ -174,6 +178,8 @@ export async function updateInvoice(
     discountPercent: number;
     paymentMethod: string;
     paymentStatus: string;
+    amountPaid: number;
+    balanceAmount: number;
     notes?: string;
   }
 ) {
@@ -322,6 +328,8 @@ export async function updateInvoice(
         totalAmount,
         paymentMethod: data.paymentMethod,
         paymentStatus: data.paymentStatus,
+        amountPaid: data.amountPaid,
+        balanceAmount: data.balanceAmount,
         notes: data.notes || null,
         items: {
           create: newItemsData,

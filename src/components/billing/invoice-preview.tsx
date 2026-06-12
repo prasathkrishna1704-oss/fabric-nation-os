@@ -251,6 +251,26 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                   {formatCurrency(invoice.totalAmount)}
                 </td>
               </tr>
+              {invoice.paymentStatus !== "PAID" && invoice.amountPaid > 0 && (
+                <tr>
+                  <td className="border border-[#D8DEE4] px-3 py-1.5 text-right font-medium text-[#4B4E53]" colSpan={2}>
+                    Amount Paid
+                  </td>
+                  <td className="border border-[#D8DEE4] px-3 py-1.5 text-right text-emerald-600 font-semibold w-28">
+                    {formatCurrency(invoice.amountPaid)}
+                  </td>
+                </tr>
+              )}
+              {invoice.paymentStatus !== "PAID" && invoice.balanceAmount > 0 && (
+                <tr>
+                  <td className="border border-[#D8DEE4] px-3 py-1.5 text-right font-bold text-[#1D1E27]" colSpan={2}>
+                    Balance Amount
+                  </td>
+                  <td className="border border-[#D8DEE4] px-3 py-1.5 text-right text-[#C80018] font-bold w-28">
+                    {formatCurrency(invoice.balanceAmount)}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
