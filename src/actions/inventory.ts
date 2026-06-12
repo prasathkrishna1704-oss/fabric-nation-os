@@ -312,6 +312,42 @@ export async function adjustStock(data: {
   revalidatePath("/inventory");
 }
 
+export async function replaceStock(data: {
+  productId: string;
+  newQuantity: number;
+  notes?: string;
+}) {
+  const product = await prisma.product.findUnique({
+    where: { id: data.productId },
+  });
+
+  if (!product) throw new Error("Product not found");
+
+  const diff = data.newQuantity - product.currentStock;
+  const type = diff >= 0 ? "INWARD" : "OUTWARD";
+
+  await prisma.$transaction([
+    prisma.product.update({
+      where: { id: data.productId },
+      data: { currentStock: data.newQuantity },
+    }),
+    prisma.stockLedger.create({
+      data: {
+        productId: data.productId,
+        type,
+        quantity: Math.abs(diff),
+        referenceType: "MANUAL",
+        notes: data.notes || "Stock manually replaced/overwritten",
+        balanceAfter: data.newQuantity,
+      },
+    }),
+  ]);
+
+  revalidatePath("/inventory");
+  revalidatePath("/stock/inward");
+  revalidatePath("/");
+}
+
 export async function getStockLedger(productId?: string) {
   const where: Record<string, unknown> = {};
   if (productId) {

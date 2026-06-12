@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { inwardStock } from "@/actions/inventory";
+import { inwardStock, replaceStock } from "@/actions/inventory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,7 @@ export function StockInwardForm({ products }: StockInwardFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [productId, setProductId] = useState("");
+  const [updateMode, setUpdateMode] = useState<"ADD" | "REPLACE">("ADD");
   const [quantity, setQuantity] = useState("");
   const [supplierName, setSupplierName] = useState("");
   const [supplierInvoiceNumber, setSupplierInvoiceNumber] = useState("");
@@ -32,14 +33,23 @@ export function StockInwardForm({ products }: StockInwardFormProps) {
     e.preventDefault();
     if (!productId || !quantity) return;
     startTransition(async () => {
-      await inwardStock({
-        productId,
-        quantity: parseFloat(quantity),
-        supplierInvoiceNumber: supplierInvoiceNumber || undefined,
-        supplierName: supplierName || undefined,
-        notes: notes || undefined,
-      });
-      setSuccess(`Successfully added ${formatQuantity(parseFloat(quantity), selected?.unit ?? "METER")} of ${selected?.name}`);
+      if (updateMode === "ADD") {
+        await inwardStock({
+          productId,
+          quantity: parseFloat(quantity),
+          supplierInvoiceNumber: supplierInvoiceNumber || undefined,
+          supplierName: supplierName || undefined,
+          notes: notes || undefined,
+        });
+        setSuccess(`Successfully added ${formatQuantity(parseFloat(quantity), selected?.unit ?? "METER")} to ${selected?.name}`);
+      } else {
+        await replaceStock({
+          productId,
+          newQuantity: parseFloat(quantity),
+          notes: notes || undefined,
+        });
+        setSuccess(`Successfully set total stock to ${formatQuantity(parseFloat(quantity), selected?.unit ?? "METER")} for ${selected?.name}`);
+      }
       setProductId("");
       setQuantity("");
       setSupplierName("");
@@ -92,7 +102,7 @@ export function StockInwardForm({ products }: StockInwardFormProps) {
               <p className="text-gray-500 font-medium text-xs mt-0.5">HSN: <span className="font-mono text-gray-700">{selected.hsnCode || "—"}</span></p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-gray-500 font-medium mb-0.5">Current Stock</p>
+              <p className="text-xs text-gray-500 font-medium mb-0.5">Current Total Weight / Stock</p>
               <div className="bg-white px-3 py-1 rounded-lg shadow-sm border border-gray-100 inline-block">
                 <span className="text-[#1D1E27] font-black text-base">{formatQuantity(selected.currentStock, selected.unit)}</span>
               </div>
@@ -100,10 +110,37 @@ export function StockInwardForm({ products }: StockInwardFormProps) {
           </div>
         )}
 
+        {selected && (
+          <div className="flex bg-gray-100/50 p-1.5 rounded-xl border border-gray-200/50 w-full md:w-96">
+            <button
+              type="button"
+              onClick={() => setUpdateMode("ADD")}
+              className={`flex-1 text-sm font-bold py-2.5 rounded-lg transition-all ${
+                updateMode === "ADD" 
+                  ? "bg-white text-[#C80018] shadow-sm border border-gray-200" 
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Add to Stock
+            </button>
+            <button
+              type="button"
+              onClick={() => setUpdateMode("REPLACE")}
+              className={`flex-1 text-sm font-bold py-2.5 rounded-lg transition-all ${
+                updateMode === "REPLACE" 
+                  ? "bg-white text-[#C80018] shadow-sm border border-gray-200" 
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Overwrite Total Weight
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <Label htmlFor="quantity" className="text-gray-700 font-bold">
-              Quantity ({selected ? UNIT_LABELS[selected.unit] || selected.unit : "Units"}) *
+              {updateMode === "ADD" ? "Amount to Add" : "New Total Weight"} ({selected ? UNIT_LABELS[selected.unit] || selected.unit : "Units"}) *
             </Label>
             <Input
               id="quantity"
@@ -144,6 +181,14 @@ export function StockInwardForm({ products }: StockInwardFormProps) {
           </div>
         </div>
 
+        {updateMode === "REPLACE" && (
+          <div className="rounded-xl bg-orange-50 border border-orange-200 p-4 animate-fade-in">
+            <p className="text-sm text-orange-800 font-medium">
+              <strong className="font-bold">Warning:</strong> You are about to directly overwrite the total stock / weight for this fabric. This will reset the stock entirely to the new value you provide instead of adding to it.
+            </p>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="inward-notes" className="text-gray-700 font-bold">Notes</Label>
           <Textarea
@@ -164,7 +209,7 @@ export function StockInwardForm({ products }: StockInwardFormProps) {
           className="inline-flex items-center justify-center gap-2 bg-[#C80018] hover:bg-[#A00010] text-white font-bold rounded-xl px-8 py-3.5 shadow-[0_8px_20px_rgba(200,0,24,0.25)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
         >
           {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowDownToLine className="w-5 h-5" />}
-          {isPending ? "Recording..." : "Record Stock Inward"}
+          {isPending ? "Recording..." : updateMode === "ADD" ? "Record Stock Inward" : "Confirm Weight Overwrite"}
         </button>
       </div>
     </form>
