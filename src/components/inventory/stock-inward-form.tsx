@@ -80,22 +80,19 @@ export function StockInwardForm({ products }: StockInwardFormProps) {
         <div className="space-y-2">
           <Label htmlFor="product-select" className="text-gray-700 font-bold">Select Fabric *</Label>
           <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full h-12 justify-between bg-[#F9FAFB] border-gray-200 rounded-xl focus:ring-[#C80018]/20 focus:border-[#C80018]/30 font-medium text-left px-3 hover:bg-gray-50"
-              >
-                {productId && selected ? (
-                  <span className="truncate">
-                    {selected.name} {(selected.productCode || selected.color) ? `[${selected.productCode || ""}${selected.productCode && selected.color ? " - " : ""}${selected.color || ""}]` : ""}
-                  </span>
-                ) : (
-                  <span className="text-gray-500 font-normal">Search fabric name or code...</span>
-                )}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
+            <PopoverTrigger
+              role="combobox"
+              aria-expanded={open}
+              className="inline-flex items-center justify-between whitespace-nowrap w-full h-12 bg-[#F9FAFB] border border-gray-200 rounded-xl focus:ring-[#C80018]/20 focus:border-[#C80018]/30 font-medium text-left px-3 hover:bg-gray-50"
+            >
+              {productId && selected ? (
+                <span className="truncate">
+                  {selected.name} {(selected.productCode || selected.color) ? `[${selected.productCode || ""}${selected.productCode && selected.color ? " - " : ""}${selected.color || ""}]` : ""}
+                </span>
+              ) : (
+                <span className="text-gray-500 font-normal">Search fabric name or code...</span>
+              )}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </PopoverTrigger>
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl shadow-xl border-gray-100 max-h-[400px]">
               <Command>

@@ -6,7 +6,7 @@ import { createProduct, updateProduct } from "@/actions/inventory";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CATEGORIES, UNIT_OPTIONS } from "@/lib/format";
+import { UNIT_OPTIONS } from "@/lib/format";
 import { GST_RATES } from "@/lib/gst-engine";
 import { Loader2, Save, X } from "lucide-react";
 import type { Product } from "@generated/prisma";
@@ -86,20 +86,6 @@ export function ProductForm({ product }: ProductFormProps) {
           <div className="sm:col-span-2 space-y-2">
             <Label htmlFor="name" className={labelClass}>Product Name *</Label>
             <Input id="name" placeholder="e.g. Pure Cotton White" required {...field("name")} className={`${inputClass} font-bold text-lg`} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="category" className={labelClass}>Category</Label>
-            <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v ?? "" }))}>
-              <SelectTrigger id="category" className={inputClass}>
-                <SelectValue placeholder="Select a category..." />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c} className="py-3 font-medium cursor-pointer">{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">
