@@ -158,7 +158,7 @@ export function PurchaseForm({ products, suppliers }: PurchaseFormProps) {
           notes: notes || undefined,
         });
         // We'll redirect to inventory or a purchase list
-        router.push(`/inventory`);
+        window.location.href = "/inventory";
       } catch (err: any) {
         setError(err.message || "An error occurred");
       }

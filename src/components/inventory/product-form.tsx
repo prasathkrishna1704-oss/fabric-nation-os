@@ -61,7 +61,7 @@ export function ProductForm({ product }: ProductFormProps) {
       } else {
         await createProduct(data);
       }
-      router.push("/inventory");
+      window.location.href = "/inventory";
     });
   };
 
@@ -191,7 +191,7 @@ export function ProductForm({ product }: ProductFormProps) {
       <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
         <button
           type="button"
-          onClick={() => router.push("/inventory")}
+          onClick={() => window.location.href = "/inventory"}
           className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 font-bold rounded-xl px-6 py-3.5 transition-all active:scale-[0.98]"
         >
           <X className="w-5 h-5" />

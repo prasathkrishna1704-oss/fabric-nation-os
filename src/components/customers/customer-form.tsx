@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createCustomer } from "@/actions/customers";
+import { createCustomer, updateCustomer } from "@/actions/customers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +39,7 @@ export function CustomerForm({ customer }: CustomerFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
-      await createCustomer({
+      const payload = {
         name: form.name,
         phone: form.phone || undefined,
         email: form.email || undefined,
@@ -48,8 +48,15 @@ export function CustomerForm({ customer }: CustomerFormProps) {
         city: form.city || undefined,
         stateCode: form.stateCode || undefined,
         pincode: form.pincode || undefined,
-      });
-      router.push("/customers");
+      };
+
+      if (customer) {
+        await updateCustomer(customer.id, payload);
+      } else {
+        await createCustomer(payload);
+      }
+      
+      window.location.href = "/customers";
     });
   };
 
@@ -107,7 +114,7 @@ export function CustomerForm({ customer }: CustomerFormProps) {
       </div>
 
       <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" onClick={() => router.push("/customers")}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={() => { window.location.href = "/customers"; }}>Cancel</Button>
         <Button type="submit" disabled={isPending} className="gap-2">
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
           {customer ? "Update Customer" : "Add Customer"}
