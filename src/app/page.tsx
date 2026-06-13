@@ -34,8 +34,10 @@ export default async function DashboardPage() {
       <KpiCards
         todaySales={data.todaySales}
         todayCount={data.todayCount}
+        todayWeight={data.todayWeight}
         monthlySales={data.monthlySales}
         monthlyCount={data.monthlyCount}
+        monthlyWeight={data.monthlyWeight}
         pendingGST={data.pendingGST}
         totalStockValue={data.totalStockValue}
         totalProducts={data.totalProducts}

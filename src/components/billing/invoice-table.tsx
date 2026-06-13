@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { deleteInvoice } from "@/actions/billing";
+import { deleteInvoice, markInvoiceAsPaid } from "@/actions/billing";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Printer, Trash2, Search } from "lucide-react";
+import { MoreHorizontal, Eye, Printer, Trash2, Search, CheckCircle } from "lucide-react";
 import type { Invoice, InvoiceItem } from "@generated/prisma";
 
 type InvoiceWithItems = Invoice & { items: InvoiceItem[] };
@@ -61,6 +61,14 @@ export function InvoiceTable({ invoices, role }: InvoiceTableProps) {
     });
   };
 
+  const handleMarkAsPaid = (id: string, invoiceNumber: string) => {
+    if (!confirm(`Mark ${invoiceNumber} as fully paid?`)) return;
+    startTransition(async () => {
+      await markInvoiceAsPaid(id);
+      router.refresh();
+    });
+  };
+
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -98,6 +106,7 @@ export function InvoiceTable({ invoices, role }: InvoiceTableProps) {
               <TableHead>Date</TableHead>
               <TableHead>Type</TableHead>
               <TableHead className="text-right">Items</TableHead>
+              <TableHead className="text-right">Weight</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Payment</TableHead>
               <TableHead>Status</TableHead>
@@ -107,7 +116,7 @@ export function InvoiceTable({ invoices, role }: InvoiceTableProps) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-12 text-muted-foreground text-sm">
+                <TableCell colSpan={10} className="text-center py-12 text-muted-foreground text-sm">
                   No invoices found
                 </TableCell>
               </TableRow>
@@ -127,6 +136,7 @@ export function InvoiceTable({ invoices, role }: InvoiceTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground">{inv.items.length}</TableCell>
+                  <TableCell className="text-right text-sm font-medium text-foreground">{inv.items.reduce((sum, item) => sum + item.quantity, 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}</TableCell>
                   <TableCell className="text-right text-sm font-bold text-foreground">{formatCurrency(inv.totalAmount)}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{inv.paymentMethod}</TableCell>
                   <TableCell>
@@ -144,6 +154,11 @@ export function InvoiceTable({ invoices, role }: InvoiceTableProps) {
                         <DropdownMenuItem onClick={() => window.open(`/billing/${inv.id}?print=1`, "_blank")} className="gap-2">
                           <Printer className="w-3.5 h-3.5" /> Print
                         </DropdownMenuItem>
+                        {inv.paymentStatus !== "PAID" && (
+                          <DropdownMenuItem onClick={() => handleMarkAsPaid(inv.id, inv.invoiceNumber)} className="gap-2 text-emerald-500">
+                            <CheckCircle className="w-3.5 h-3.5" /> Mark as Paid
+                          </DropdownMenuItem>
+                        )}
                         {role === "admin" && (
                           <>
                             <DropdownMenuSeparator />

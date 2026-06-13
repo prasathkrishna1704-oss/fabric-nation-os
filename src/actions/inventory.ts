@@ -9,9 +9,11 @@ export async function getProducts(search?: string, category?: string) {
 
   if (search) {
     where.OR = [
-      { name: { contains: search } },
-      { hsnCode: { contains: search } },
-      { category: { contains: search } },
+      { name: { contains: search, mode: "insensitive" } },
+      { hsnCode: { contains: search, mode: "insensitive" } },
+      { category: { contains: search, mode: "insensitive" } },
+      { productCode: { contains: search, mode: "insensitive" } },
+      { color: { contains: search, mode: "insensitive" } },
     ];
   }
 

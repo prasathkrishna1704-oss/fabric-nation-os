@@ -12,10 +12,15 @@ export async function getDashboardData() {
     where: {
       createdAt: { gte: startOfDay },
     },
+    include: { items: true },
   });
 
   const todaySales = todayInvoices.reduce(
     (sum, inv) => sum + inv.totalAmount,
+    0
+  );
+  const todayWeight = todayInvoices.reduce(
+    (sum, inv) => sum + inv.items.reduce((s, i) => s + i.quantity, 0),
     0
   );
   const todayCount = todayInvoices.length;
@@ -25,10 +30,15 @@ export async function getDashboardData() {
     where: {
       createdAt: { gte: startOfMonth },
     },
+    include: { items: true },
   });
 
   const monthlySales = monthInvoices.reduce(
     (sum, inv) => sum + inv.totalAmount,
+    0
+  );
+  const monthlyWeight = monthInvoices.reduce(
+    (sum, inv) => sum + inv.items.reduce((s, i) => s + i.quantity, 0),
     0
   );
   const monthlyCount = monthInvoices.length;
@@ -138,8 +148,10 @@ export async function getDashboardData() {
   return {
     todaySales: Math.round(todaySales * 100) / 100,
     todayCount,
+    todayWeight: Math.round(todayWeight * 100) / 100,
     monthlySales: Math.round(monthlySales * 100) / 100,
     monthlyCount,
+    monthlyWeight: Math.round(monthlyWeight * 100) / 100,
     pendingGST: Math.round(pendingGST * 100) / 100,
     totalStockValue: Math.round(totalStockValue * 100) / 100,
     totalStockUnits: Math.round(totalStockUnits * 100) / 100,

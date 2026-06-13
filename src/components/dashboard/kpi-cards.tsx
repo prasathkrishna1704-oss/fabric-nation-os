@@ -103,8 +103,10 @@ function KpiCard({ title, value, subtitle, icon: Icon, trend, variant = "red", s
 interface KpiCardsProps {
   todaySales: number;
   todayCount: number;
+  todayWeight: number;
   monthlySales: number;
   monthlyCount: number;
+  monthlyWeight: number;
   pendingGST: number;
   totalStockValue: number;
   totalProducts: number;
@@ -115,8 +117,10 @@ interface KpiCardsProps {
 export function KpiCards({
   todaySales,
   todayCount,
+  todayWeight,
   monthlySales,
   monthlyCount,
+  monthlyWeight,
   pendingGST,
   totalStockValue,
   totalProducts,
@@ -128,7 +132,7 @@ export function KpiCards({
       <KpiCard
         title="Today's Sales"
         value={formatCurrency(todaySales)}
-        subtitle={`${todayCount} invoice${todayCount !== 1 ? "s" : ""} today`}
+        subtitle={`${todayCount} invoice${todayCount !== 1 ? "s" : ""} · ${todayWeight.toLocaleString("en-IN", { maximumFractionDigits: 2 })} Total Wt`}
         icon={IndianRupee}
         variant="red"
         stagger="stagger-1"
@@ -136,7 +140,7 @@ export function KpiCards({
       <KpiCard
         title="Monthly Revenue"
         value={formatCurrency(monthlySales)}
-        subtitle={`${monthlyCount} invoices this month`}
+        subtitle={`${monthlyCount} invoices · ${monthlyWeight.toLocaleString("en-IN", { maximumFractionDigits: 2 })} Total Wt`}
         icon={TrendingUp}
         variant="dark"
         stagger="stagger-2"

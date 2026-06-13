@@ -449,3 +449,24 @@ export async function deleteInvoice(id: string) {
   revalidatePath("/inventory");
   revalidatePath("/");
 }
+
+export async function markInvoiceAsPaid(id: string) {
+  const invoice = await prisma.invoice.findUnique({
+    where: { id },
+  });
+
+  if (!invoice) throw new Error("Invoice not found");
+
+  await prisma.invoice.update({
+    where: { id },
+    data: {
+      paymentStatus: "PAID",
+      amountPaid: invoice.totalAmount,
+      balanceAmount: 0,
+    },
+  });
+
+  revalidatePath("/billing");
+  revalidatePath(`/billing/${id}`);
+  revalidatePath("/");
+}
