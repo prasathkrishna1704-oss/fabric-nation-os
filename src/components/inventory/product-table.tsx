@@ -33,7 +33,9 @@ export function ProductTable({ products, role }: ProductTableProps) {
   const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     (p.hsnCode?.includes(search) ?? false) ||
-    (p.category?.toLowerCase().includes(search.toLowerCase()) ?? false)
+    (p.category?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+    (p.productCode?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+    (p.color?.toLowerCase().includes(search.toLowerCase()) ?? false)
   );
 
   const handleDelete = (id: string) => {

@@ -56,7 +56,8 @@ export function ProductForm({ product }: ProductFormProps) {
         lowStockThreshold: parseFloat(form.lowStockThreshold) || 5,
       };
       if (product) {
-        await updateProduct(product.id, data);
+        const { currentStock, ...updateData } = data;
+        await updateProduct(product.id, updateData);
       } else {
         await createProduct(data);
       }
@@ -85,6 +86,25 @@ export function ProductForm({ product }: ProductFormProps) {
           <div className="sm:col-span-2 space-y-2">
             <Label htmlFor="name" className={labelClass}>Product Name *</Label>
             <Input id="name" placeholder="e.g. Pure Cotton White" required {...field("name")} className={`${inputClass} font-bold text-lg`} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category" className={labelClass}>Category</Label>
+            <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v ?? "" }))}>
+              <SelectTrigger id="category" className={inputClass}>
+                <SelectValue placeholder="Select a category..." />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c} className="py-3 font-medium cursor-pointer">{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="hsnCode" className={labelClass}>HSN Code</Label>
+            <Input id="hsnCode" placeholder="e.g. 5208" {...field("hsnCode")} className={inputClass} />
           </div>
 
           <div className="space-y-2">
@@ -164,8 +184,10 @@ export function ProductForm({ product }: ProductFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2 flex flex-col">
             <Label htmlFor="currentStock" className={labelClass}>Opening Stock</Label>
-            <Input id="currentStock" type="number" step="0.01" min="0" placeholder="0" {...field("currentStock")} className={inputClass} />
-            <p className="text-[11px] font-medium text-gray-400 mt-auto pt-1">Fractional quantities allowed (e.g. 2.5)</p>
+            <Input id="currentStock" type="number" step="0.01" min="0" placeholder="0" {...field("currentStock")} className={inputClass} disabled={!!product} />
+            <p className="text-[11px] font-medium text-gray-400 mt-auto pt-1">
+              {product ? "Cannot change opening stock while editing" : "Fractional quantities allowed (e.g. 2.5)"}
+            </p>
           </div>
 
           <div className="space-y-2 flex flex-col">
