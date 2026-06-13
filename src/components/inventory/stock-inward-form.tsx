@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { formatQuantity, UNIT_LABELS } from "@/lib/format";
-import { Loader2, ArrowDownToLine, PackagePlus } from "lucide-react";
+import { Loader2, ArrowDownToLine, PackagePlus, ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Product } from "@generated/prisma";
 
 interface StockInwardFormProps {
@@ -19,6 +21,7 @@ interface StockInwardFormProps {
 export function StockInwardForm({ products }: StockInwardFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [open, setOpen] = useState(false);
   const [productId, setProductId] = useState("");
   const [updateMode, setUpdateMode] = useState<"ADD" | "REPLACE">("ADD");
   const [quantity, setQuantity] = useState("");
@@ -76,23 +79,64 @@ export function StockInwardForm({ products }: StockInwardFormProps) {
       <div className="premium-card rounded-[24px] p-8 space-y-7">
         <div className="space-y-2">
           <Label htmlFor="product-select" className="text-gray-700 font-bold">Select Fabric *</Label>
-          <Select value={productId} onValueChange={(v) => setProductId(v ?? "")} required>
-            <SelectTrigger id="product-select" className="h-12 bg-[#F9FAFB] border-gray-200 rounded-xl focus:ring-[#C80018]/20 focus:border-[#C80018]/30 font-medium">
-              <SelectValue placeholder="Choose a fabric product...">
-                {productId ? products.find((p) => p.id === productId)?.name : "Choose a fabric product..."}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="min-w-[400px] rounded-xl shadow-xl border-gray-100">
-              {products.map((p) => (
-                <SelectItem key={p.id} value={p.id} className="py-3 cursor-pointer">
-                  <span className="font-bold text-gray-900">{p.name}</span>
-                  <span className="text-gray-400 ml-2 text-xs font-semibold">
-                    (Current Stock: {formatQuantity(p.currentStock, p.unit)})
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full h-12 justify-between bg-[#F9FAFB] border-gray-200 rounded-xl focus:ring-[#C80018]/20 focus:border-[#C80018]/30 font-medium text-left px-3 hover:bg-gray-50"
+              >
+                {productId && selected ? (
+                  <span className="truncate">
+                    {selected.name} {(selected.productCode || selected.color) ? `[${selected.productCode || ""}${selected.productCode && selected.color ? " - " : ""}${selected.color || ""}]` : ""}
                   </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                ) : (
+                  <span className="text-gray-500 font-normal">Search fabric name or code...</span>
+                )}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl shadow-xl border-gray-100 max-h-[400px]">
+              <Command>
+                <CommandInput placeholder="Search fabrics..." className="h-11" />
+                <CommandList className="max-h-[300px]">
+                  <CommandEmpty>No fabric found.</CommandEmpty>
+                  <CommandGroup>
+                    {products.map((p) => (
+                      <CommandItem
+                        key={p.id}
+                        value={`${p.name} ${p.productCode || ""} ${p.color || ""} ${p.hsnCode || ""} ${p.category || ""}`}
+                        onSelect={() => {
+                          setProductId(p.id);
+                          setOpen(false);
+                        }}
+                        className="py-3 cursor-pointer flex flex-col items-start gap-1"
+                      >
+                        <div className="flex items-center w-full">
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4 text-[#C80018]",
+                              productId === p.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <span className="font-bold text-gray-900">{p.name}</span>
+                          {(p.productCode || p.color) && (
+                            <span className="text-gray-500 ml-2 text-xs font-medium">
+                              [{p.productCode || ""}{p.productCode && p.color ? " - " : ""}{p.color || ""}]
+                            </span>
+                          )}
+                        </div>
+                        <div className="pl-6 text-gray-400 text-xs font-semibold">
+                          Stock: {formatQuantity(p.currentStock, p.unit)} · Category: {p.category || "—"}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {selected && (
