@@ -108,37 +108,39 @@ export function ProductForm({ product }: ProductFormProps) {
             <Input id="gsm" placeholder="e.g. 150 GSM" {...field("gsm")} className={inputClass} />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="numberOfRolls" className={labelClass}>Number of Rolls</Label>
-            <Input id="numberOfRolls" type="number" min="0" placeholder="e.g. 10" {...field("numberOfRolls")} className={inputClass} />
-          </div>
+          <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="numberOfRolls" className={labelClass}>Number of Rolls</Label>
+              <Input id="numberOfRolls" type="number" min="0" placeholder="e.g. 10" {...field("numberOfRolls")} className={inputClass} />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="unit" className={labelClass}>Unit of Measure *</Label>
-            <Select value={form.unit} onValueChange={(v) => setForm((f) => ({ ...f, unit: v ?? "METER" }))}>
-              <SelectTrigger id="unit" className={inputClass}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                {UNIT_OPTIONS.map((u) => (
-                  <SelectItem key={u.value} value={u.value} className="py-3 font-medium cursor-pointer">{u.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="unit" className={labelClass}>Unit of Measure *</Label>
+              <Select value={form.unit} onValueChange={(v) => setForm((f) => ({ ...f, unit: v ?? "METER" }))}>
+                <SelectTrigger id="unit" className={inputClass}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {UNIT_OPTIONS.map((u) => (
+                    <SelectItem key={u.value} value={u.value} className="py-3 font-medium cursor-pointer">{u.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="gstRate" className={labelClass}>GST Rate (%)</Label>
-            <Select value={form.gstRate} onValueChange={(v) => setForm((f) => ({ ...f, gstRate: v ?? "5" }))}>
-              <SelectTrigger id="gstRate" className={inputClass}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                {GST_RATES.map((r) => (
-                  <SelectItem key={r} value={r.toString()} className="py-3 font-medium cursor-pointer">{r}% GST</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label htmlFor="gstRate" className={labelClass}>GST Rate (%)</Label>
+              <Select value={form.gstRate} onValueChange={(v) => setForm((f) => ({ ...f, gstRate: v ?? "5" }))}>
+                <SelectTrigger id="gstRate" className={inputClass}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {GST_RATES.map((r) => (
+                    <SelectItem key={r} value={r.toString()} className="py-3 font-medium cursor-pointer">{r}% GST</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
