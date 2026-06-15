@@ -95,7 +95,9 @@ export function ProductTable({ products, role }: ProductTableProps) {
                           <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${isCritical ? "text-red-400" : "text-amber-400"}`} />
                         )}
                         <div>
-                          <p className="font-medium text-foreground text-sm">{product.name}</p>
+                          <Link href={`/inventory/${product.id}`} className="font-medium text-foreground text-sm hover:text-[#C80018] hover:underline transition-colors block">
+                            {product.name}
+                          </Link>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             {product.productCode && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{product.productCode}</Badge>}
                             {product.category && <span className="text-xs text-muted-foreground">{product.category}</span>}
@@ -136,10 +138,7 @@ export function ProductTable({ products, role }: ProductTableProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => router.push(`/inventory/${product.id}`)} className="gap-2">
-                            <Pencil className="w-3.5 h-3.5" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/inventory/ledger?product=${product.id}`)} className="gap-2">
-                            <BookOpen className="w-3.5 h-3.5" /> View Ledger
+                            <BookOpen className="w-3.5 h-3.5" /> View Details & Ledger
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => setPrintProduct(product)} className="gap-2">
