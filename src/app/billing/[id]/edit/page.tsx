@@ -8,6 +8,8 @@ export const metadata = {
   title: "Edit Invoice — Fabric Nation",
 };
 
+export const maxDuration = 30;
+
 interface Props {
   params: Promise<{ id: string }>;
 }
