@@ -232,50 +232,63 @@ export async function updateInvoice(
 
   const totalAmount = Math.round((discountedSubtotal + totalCgst + totalSgst + totalIgst) * 100) / 100;
 
-  const invoice = await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx) => {
     const existingInvoice = await tx.invoice.findUnique({
       where: { id },
       include: { items: true },
     });
     if (!existingInvoice) throw new Error("Invoice not found");
 
-    // 1. Restore old stock
+    // Read every affected product once. Avoid one database round trip per line item.
+    const productIds = [...new Set([
+      ...existingInvoice.items.map((item) => item.productId),
+      ...calculatedItems.map((item) => item.productId),
+    ])];
+    const products = await tx.product.findMany({ where: { id: { in: productIds } } });
+    const productMap = new Map(products.map((product) => [product.id, product]));
+
+    const stockByProduct = new Map(products.map((product) => [product.id, product.currentStock]));
+    const ledgerEntries = [];
+
     for (const oldItem of existingInvoice.items) {
-      const product = await tx.product.findUnique({ where: { id: oldItem.productId } });
+      const product = productMap.get(oldItem.productId);
       if (!product) continue;
-      
-      const restoredStock = product.currentStock + oldItem.quantity;
-      await tx.product.update({
-        where: { id: oldItem.productId },
-        data: { currentStock: restoredStock },
-      });
-      await tx.stockLedger.create({
-        data: {
-          productId: oldItem.productId,
-          type: "INWARD",
-          quantity: oldItem.quantity,
-          referenceType: "INVOICE_EDIT_REVERT",
-          referenceId: id,
-          notes: `Reverted for edit: Invoice ${existingInvoice.invoiceNumber}`,
-          balanceAfter: restoredStock,
-        },
+
+      const restoredStock = (stockByProduct.get(oldItem.productId) ?? product.currentStock) + oldItem.quantity;
+      stockByProduct.set(oldItem.productId, restoredStock);
+      ledgerEntries.push({
+        productId: oldItem.productId,
+        type: "INWARD" as const,
+        quantity: oldItem.quantity,
+        referenceType: "INVOICE_EDIT_REVERT",
+        referenceId: id,
+        notes: `Reverted for edit: Invoice ${existingInvoice.invoiceNumber}`,
+        balanceAfter: restoredStock,
       });
     }
 
-    // 2. Delete old items
-    await tx.invoiceItem.deleteMany({ where: { invoiceId: id } });
-
-    // 3. Prepare new items with product details
-    const newItemsData = [];
-    for (const calcItem of calculatedItems) {
-      const product = await tx.product.findUnique({ where: { id: calcItem.productId } });
+    const newItemsData = calculatedItems.map((calcItem) => {
+      const product = productMap.get(calcItem.productId);
       if (!product) throw new Error(`Product not found: ${calcItem.productId}`);
-      
-      if (product.currentStock < calcItem.quantity) {
-        throw new Error(`Insufficient stock for ${product.name}. Available: ${product.currentStock}, Requested: ${calcItem.quantity}`);
+
+      const availableStock = stockByProduct.get(calcItem.productId) ?? product.currentStock;
+      if (availableStock < calcItem.quantity) {
+        throw new Error(`Insufficient stock for ${product.name}. Available: ${availableStock}, Requested: ${calcItem.quantity}`);
       }
 
-      newItemsData.push({
+      const newBalance = availableStock - calcItem.quantity;
+      stockByProduct.set(calcItem.productId, newBalance);
+      ledgerEntries.push({
+        productId: calcItem.productId,
+        type: "OUTWARD" as const,
+        quantity: -calcItem.quantity,
+        referenceType: "INVOICE",
+        referenceId: id,
+        notes: `Edited Invoice ${existingInvoice.invoiceNumber}`,
+        balanceAfter: newBalance,
+      });
+
+      return {
         productId: calcItem.productId,
         productName: product.name,
         hsnCode: data.hsnCode || product.hsnCode,
@@ -287,28 +300,19 @@ export async function updateInvoice(
         sgst: calcItem.sgst,
         igst: calcItem.igst,
         amount: calcItem.amount,
-      });
+      };
+    });
 
-      // 4. Deduct new stock
-      const newBalance = product.currentStock - calcItem.quantity;
-      await tx.product.update({
-        where: { id: calcItem.productId },
-        data: { currentStock: newBalance },
-      });
-      await tx.stockLedger.create({
-        data: {
-          productId: calcItem.productId,
-          type: "OUTWARD",
-          quantity: -calcItem.quantity,
-          referenceType: "INVOICE",
-          referenceId: id,
-          notes: `Edited Invoice ${existingInvoice.invoiceNumber}`,
-          balanceAfter: newBalance,
-        },
-      });
+    // Batch the writes after all validation and calculations finish.
+    await tx.invoiceItem.deleteMany({ where: { invoiceId: id } });
+    for (const [productId, currentStock] of stockByProduct) {
+      await tx.product.update({ where: { id: productId }, data: { currentStock } });
+    }
+    if (ledgerEntries.length > 0) {
+      await tx.stockLedger.createMany({ data: ledgerEntries });
     }
 
-    // 5. Update invoice
+    // Update invoice
     const updatedInv = await tx.invoice.update({
       where: { id },
       data: {
